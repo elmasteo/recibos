@@ -1,0 +1,48 @@
+:root{--ink:#24135f;--violet:#5b2bd9;--pink:#ff2e93;--sun:#ffb81c;--teal:#00b8a3;--bg:#f4efff;--card:#fff;--err:#c4001f;--r:18px}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:17px;padding-bottom:84px}
+.top{background:var(--ink);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.top h1{margin:0;font-size:1.25rem;font-weight:800}
+main{max-width:720px;margin:0 auto;padding:18px}
+h2{font-size:1.15rem;margin:22px 0 10px}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+.grid.three{grid-template-columns:repeat(3,1fr)}
+.opt{background:var(--card);border:3px solid transparent;border-radius:var(--r);padding:14px 8px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 2px 0 #d9ceff}
+.opt .ic{font-size:1.7rem}
+.opt[aria-pressed=true]{border-color:var(--pink);background:#fff0f8}
+.opt[aria-pressed=true]::after{content:"✓ Elegido";font-size:.75rem;color:var(--pink)}
+label{display:block;font-weight:700;margin:14px 0 6px}
+input,select,textarea{width:100%;font:inherit;padding:14px;border:2px solid #b9a6f5;border-radius:14px;background:#fff;color:var(--ink);min-height:50px}
+.btn{width:100%;margin-top:20px;background:var(--pink);color:#fff;border:0;border-radius:var(--r);padding:18px;font:inherit;font-size:1.2rem;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #b3005f}
+.btn.alt{background:var(--teal);box-shadow:0 4px 0 #007f70}
+.btn.small{width:auto;padding:10px 16px;font-size:1rem;margin:0;background:var(--violet);box-shadow:0 3px 0 #3a169f}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--ink);box-shadow:none}
+button:disabled{opacity:.6;cursor:wait}
+:focus-visible{outline:4px solid var(--sun);outline-offset:2px}
+.link{background:none;border:0;color:#fff;font:inherit;text-decoration:underline;cursor:pointer;min-height:44px}
+.panel{background:var(--card);border-radius:var(--r);padding:16px;margin-top:14px}
+.result{background:var(--ink);color:#fff;border-radius:var(--r);padding:18px;margin-top:20px}
+.result .total{font-size:2.3rem;font-weight:800;color:var(--sun);line-height:1.1}
+.result .rule{display:inline-block;background:var(--teal);color:#04332d;font-weight:700;border-radius:99px;padding:4px 12px;margin:8px 0 12px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #ffffff33;align-items:baseline}
+.row b{font-size:1.2rem}.row small{display:block;opacity:.8}
+.light .row{border-color:#d9ceff}
+.msg{border-radius:14px;padding:12px 14px;margin-top:14px;font-weight:700}
+.msg.err{background:#ffe3e8;color:var(--err);border:2px solid var(--err)}
+.msg.err::before{content:"⚠️ "}
+.msg.info{background:#e1fbf7;border:2px solid var(--teal)}
+.unit{display:grid;gap:8px;grid-template-columns:1fr 90px}
+.unit .full{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.unit label{margin:0 0 4px;font-size:.85rem}
+.badge{font-weight:700;border-radius:99px;padding:4px 12px;font-size:.85rem}
+.badge.on{background:#d3fff7}.badge.off{background:#ffe0a8}
+.hist{width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:0;border-radius:var(--r);padding:14px;margin-top:10px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.hist b{font-size:1.15rem;color:var(--violet)}
+.filters{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--ink);padding:8px;gap:6px}
+.tabs button{flex:1;min-height:56px;border:0;border-radius:14px;background:transparent;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.tabs button[aria-current=page]{background:var(--violet);box-shadow:inset 0 -4px 0 var(--sun)}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--teal);color:#04332d;font-weight:800;padding:12px 20px;border-radius:99px;display:none;max-width:90%}
+#toast.show{display:block}
+@media(min-width:720px){.opt{min-height:90px}.unit{grid-template-columns:1fr 120px 200px}}
+@media(prefers-reduced-motion:no-preference){.result{animation:pop .25s ease-out}@keyframes pop{from{transform:scale(.97);opacity:.4}}}

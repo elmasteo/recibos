@@ -1,0 +1,1 @@
+window.APP_CONFIG={url:"https://dxqnpkyuwnuvvkbphrcv.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4cW5wa3l1d251dnZrYnBocmN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMzI2NzYsImV4cCI6MjEwODcwODY3Nn0.CIDy9JfhKWuvf9wPaWrQwB1hR-r7AOXedIba0hD6t1Y"};

@@ -1,0 +1,34 @@
+// Acceso a datos (Supabase). Ninguna regla de cálculo aquí.
+const sb = window.supabase.createClient(window.APP_CONFIG.url, window.APP_CONFIG.anonKey);
+const ok = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
+const DB = {
+  session: async () => (await sb.auth.getSession()).data.session,
+  login: async (email, password) => ok(await sb.auth.signInWithPassword({ email, password })),
+  logout: () => sb.auth.signOut(),
+  houses: async () => ok(await sb.from('houses').select('*').order('code')),
+  units: async (houseId) => ok(await sb.from('apartments').select('*').eq('house_id', houseId).order('created_at')),
+  addUnit: async (u) => ok(await sb.from('apartments').insert(u)),
+  saveUnit: async (id, u) => ok(await sb.from('apartments').update({ ...u, updated_at: new Date().toISOString() }).eq('id', id)),
+  unitHasHistory: async (id) => { const { count, error } = await sb.from('bill_allocations').select('id', { count: 'exact', head: true }).eq('apartment_id', id); if (error) throw new Error(error.message); return count > 0; },
+  duplicate: async (houseId, service, ref, meter) => {
+    if (!ref) return false;
+    let q = sb.from('utility_bills').select('id').eq('house_id', houseId).eq('service_type', service).eq('invoice_reference', ref);
+    if (meter) q = q.eq('meter_identifier', meter);
+    return ok(await q).length > 0;
+  },
+  saveBill: async (bill, rows) => {
+    const [b] = ok(await sb.from('utility_bills').insert(bill).select());
+    const { error } = await sb.from('bill_allocations').insert(rows.map((r) => ({
+      bill_id: b.id, apartment_id: r.apartment_id, occupants_count_snapshot: r.occupants,
+      apartment_name_snapshot: r.name, allocation_rule: r.rule, allocated_amount: r.amount })));
+    if (error) { await sb.from('utility_bills').delete().eq('id', b.id); throw new Error(error.message); } // sin recibos a medias
+    return b;
+  },
+  bills: async (f) => {
+    let q = sb.from('utility_bills').select('*, houses(name)').order('bill_date', { ascending: false }).order('created_at', { ascending: false }).limit(100);
+    if (f.house) q = q.eq('house_id', f.house); if (f.service) q = q.eq('service_type', f.service);
+    if (f.from) q = q.gte('bill_date', f.from); if (f.to) q = q.lte('bill_date', f.to);
+    return ok(await q);
+  },
+  allocations: async (billId) => ok(await sb.from('bill_allocations').select('*').eq('bill_id', billId).order('created_at')),
+};
