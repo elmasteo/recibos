@@ -16,7 +16,7 @@ async function init() {
 function loginView() {
   $('#tabs').hidden = true; $('#logout').hidden = true;
   $('#view').innerHTML = `<h2>Ingresar</h2><form id="lf"><label for="em">Correo</label><input id="em" type="email" required autocomplete="username"><label for="pw">Contraseña</label><input id="pw" type="password" required autocomplete="current-password"><button class="btn">Entrar</button><div id="le"></div></form>`;
-  $('#lf').onsubmit = async (e) => { e.preventDefault(); try { await DB.login($('#em').value, $('#pw').value); start(); } catch (x) { $('#le').innerHTML = `<div class="msg err">${esc(x.message)}</div>`; } };
+  $('#lf').onsubmit = async (e) => { e.preventDefault(); try { await DB.login($('#em').value.trim(), $('#pw').value); start(); } catch (x) { $('#le').innerHTML = `<div class="msg err">${esc(x.message)}</div>`; } };
 }
 async function start() {
   $('#tabs').hidden = false; $('#logout').hidden = false;
@@ -45,7 +45,7 @@ function calcView() {
   if (sv === 'electricity' && c === 1) extra = `<label for="uid">Apartamento de este recibo</label><select id="uid"><option value="">Elige…</option>${act.map((u) => `<option value="${u.id}" ${S.unitId === u.id ? 'selected' : ''}>${esc(u.name)}</option>`).join('')}</select>`;
   const mo = sv === 'electricity' && c === 3 ? ['garage_1', 'garage_2', 'shared_apartments'] : sv === 'garbage' && c === 3 ? ['basura_1', 'basura_2'] : null;
   if (mo) extra = `<label for="mt">${sv === 'garbage' ? '¿Cuál recibo?' : '¿Cuál contador?'}</label><select id="mt"><option value="">Elige…</option>${mo.map((m) => `<option value="${m}" ${S.meter === m ? 'selected' : ''}>${METERS[m]}</option>`).join('')}</select>`;
-  const how = c === 2 ? '⚖️ Se divide en partes iguales entre las unidades activas.' : sv === 'electricity' && c === 1 ? '🎯 Luz individual: se asigna al apartamento elegido, sin dividir.' : sv === 'electricity' && c === 3 ? '🎯 Garajes: contador individual. Contador compartido: partes iguales entre los 4 apartamentos.' : '👥 Se reparte según el número de personas de cada unidad.';
+  const how = sv === 'electricity' && c === 1 ? '🎯 Luz individual: se asigna al apartamento elegido, sin dividir.' : sv === 'electricity' && c === 3 ? '🎯 Garajes: contador individual. Contador compartido: se reparte por personas entre los 4 apartamentos.' : '👥 Se reparte según el número de personas de cada apartamento.';
   h += `<h2>3. Datos del recibo</h2><div class="panel"><div class="msg info" style="margin-top:0">${how}</div>${extra}
   <label for="amt">Importe total (COP)</label><input id="amt" inputmode="numeric" placeholder="Ej: 185000" value="${esc(f.amount)}">
   <label for="dt">Fecha del recibo</label><input id="dt" type="date" value="${esc(f.date || new Date().toISOString().slice(0, 10))}">
@@ -63,13 +63,13 @@ function calcView() {
 
 function unitsView() {
   const c = code();
-  return `<h2>Casa</h2>${houseBtns()}<h2>Unidades</h2>${msg()}` + S.units.map((u) => `<div class="panel unit" data-id="${u.id}">
+  return `<h2>Casa</h2>${houseBtns()}<h2>Apartamentos</h2>${msg()}` + S.units.map((u) => `<div class="panel unit" data-id="${u.id}">
     <div><label for="n${u.id}">Nombre</label><input id="n${u.id}" class="nm" value="${esc(u.name)}"></div>
     <div><label for="p${u.id}">Personas</label><input id="p${u.id}" class="pp" type="number" min="0" step="1" value="${u.occupants_count}"></div>
     ${c === 3 ? `<div><label for="g${u.id}">Contador de luz</label><select id="g${u.id}" class="gp">${Object.entries({ garage_1: 'Garaje 1', garage_2: 'Garaje 2', shared_apartments: 'Compartido (4 apts)', not_applicable: 'No aplica' }).map(([k, v]) => `<option value="${k}" ${u.electricity_meter_group === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>` : ''}
     <div class="full"><span class="badge ${u.is_active ? 'on' : 'off'}">${u.is_active ? '✓ Activa' : '⏸ Inactiva'}</span>
       <button class="btn small" data-save="${u.id}">Guardar</button><button class="btn small ghost" data-toggle="${u.id}">${u.is_active ? 'Desactivar' : 'Activar'}</button></div></div>`).join('')
-    + `<button class="btn alt" id="add">+ Agregar unidad</button>`;
+    + `<button class="btn alt" id="add">+ Agregar apartamento</button>`;
 }
 
 async function loadHist() { S.hist.list = await DB.bills(S.hist.f); }
@@ -104,7 +104,7 @@ function bind() {
     finally { S.saving = false; }
     S.result = null; S.form = {}; S.hist.list = null; toast('✓ Recibo guardado');
   }));
-  // Unidades
+  // Apartamentos
   const val = (id) => { const p = document.querySelector(`[data-id="${id}"]`); return { name: p.querySelector('.nm').value.trim(), occ: p.querySelector('.pp').value, grp: p.querySelector('.gp')?.value }; };
   on('[data-save]', 'click', (e) => run(async () => {
     const id = e.currentTarget.dataset.save, v = val(id), n = Number(v.occ);
@@ -115,10 +115,10 @@ function bind() {
   }));
   on('[data-toggle]', 'click', (e) => run(async () => {
     const id = e.currentTarget.dataset.toggle, u = S.units.find((x) => x.id === id);
-    if (u.is_active && (await DB.unitHasHistory(id)) && !confirm('Esta unidad tiene recibos históricos. Se conservarán, pero no entrará en nuevos cálculos. ¿Desactivar?')) return;
+    if (u.is_active && (await DB.unitHasHistory(id)) && !confirm('Este apartamento tiene recibos históricos. Se conservarán, pero no entrará en nuevos cálculos. ¿Desactivar?')) return;
     await DB.saveUnit(id, { is_active: !u.is_active }); S.units = await DB.units(S.house);
   }));
-  on('#add', 'click', () => run(async () => { await DB.addUnit({ house_id: S.house, name: `Apartamento ${S.units.length + 1}`, occupants_count: 1 }); S.units = await DB.units(S.house); toast('✓ Unidad agregada: edita su nombre'); }));
+  on('#add', 'click', () => run(async () => { await DB.addUnit({ house_id: S.house, name: `Apartamento ${S.units.length + 1}`, occupants_count: 1 }); S.units = await DB.units(S.house); toast('✓ Apartamento agregado: edita su nombre'); }));
   // Historial
   const filt = () => run(async () => { S.hist.f = { house: $('#fh').value, service: $('#fs').value, from: $('#ff').value, to: $('#ft').value }; S.hist.open = null; await loadHist(); });
   ['#fh', '#fs', '#ff', '#ft'].forEach((s) => on(s, 'change', filt));

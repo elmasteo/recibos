@@ -6,7 +6,7 @@
   // Método del mayor resto: la suma siempre es exactamente `amount`; desempate por orden.
   function byWeights(amount, items) {
     const total = items.reduce((s, i) => s + i.weight, 0);
-    if (total <= 0) fail('El total de personas es 0. Corrige la ocupación en «Unidades».');
+    if (total <= 0) fail('El total de personas es 0. Corrige la ocupación en «Apartamentos».');
     const rows = items.map((it, idx) => {
       const num = amount * it.weight;
       return { id: it.id, idx, base: Math.floor(num / total), rem: num % total };
@@ -24,7 +24,7 @@
     if (!Number.isInteger(amount) || amount <= 0) fail('El importe debe ser un número entero de pesos mayor que cero.');
     if (!SERVICES[service]) fail('Servicio no válido.');
     const units = ctx.units.filter((u) => u.is_active);
-    if (!units.length) fail('No hay unidades activas en esta casa.');
+    if (!units.length) fail('No hay apartamentos activos en esta casa.');
     let rule, subset, dist;
 
     if (service === 'electricity' && code === 1) {
@@ -33,12 +33,9 @@
     } else if (service === 'electricity' && code === 3) {
       const grp = ['garage_1', 'garage_2', 'shared_apartments'].includes(meter) ? meter : fail('Selecciona el contador de luz.');
       subset = units.filter((u) => u.electricity_meter_group === grp);
-      if (!subset.length) fail('No hay unidades activas asociadas a ese contador. Revisa «Unidades».');
-      rule = grp === 'shared_apartments' ? 'equal' : 'direct';
-      dist = byWeights(amount, subset.map((u) => ({ id: u.id, weight: 1 })));
-    } else if (code === 2) {
-      rule = 'equal'; subset = units;
-      dist = byWeights(amount, subset.map((u) => ({ id: u.id, weight: 1 })));
+      if (!subset.length) fail('No hay apartamentos activos asociados a ese contador. Revisa «Apartamentos».');
+      rule = grp === 'shared_apartments' ? 'people' : 'direct';
+      dist = byWeights(amount, subset.map((u) => ({ id: u.id, weight: grp === 'shared_apartments' ? u.occupants_count : 1 })));
     } else {
       if (code === 3 && service === 'garbage' && !['basura_1', 'basura_2'].includes(meter)) fail('Selecciona cuál recibo de basura es (1 o 2).');
       rule = 'people'; subset = units;
