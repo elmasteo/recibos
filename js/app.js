@@ -36,7 +36,8 @@ async function init() {
   $('#view').innerHTML = '<p>Cargando…</p>';
   await run(async () => { S.houses = await DB.houses(); S.house = S.houses[0]?.id; await loadHouse(S.house); });
 }
-$('#tabs').onclick = (e) => { const t = e.target.closest('button')?.dataset.tab; if (t) { S.tab = t; S.msg = null; run(async () => { if (t === 'history' && !S.hist.list) await loadHist(); }); } };
+$('#tabs').onclick = (e) => { const t = e.target.closest('button')?.dataset.tab; if (t) { S.tab = t; S.msg = null; if (t === 'calc') Object.assign(S, { service: null, result: null, form: {}, meter: '', unitId: '' }); // «Calcular» siempre abre limpio
+      run(async () => { if (t === 'history' && !S.hist.list) await loadHist(); }); } };
 const msg = () => (S.msg ? `<div class="msg ${S.msg.t}" role="alert">${esc(S.msg.m)}</div>` : '');
 const houseBtns = () => `<div class="grid three">${S.houses.map((h) => `<button class="opt" data-h="${h.id}" aria-pressed="${S.house === h.id}"><span class="ic">🏠</span>${esc(h.name)}</button>`).join('')}</div>`;
 async function pickHouse(id) { S.house = id; S.result = null; S.meter = ''; S.unitId = ''; await loadHouse(id); }
