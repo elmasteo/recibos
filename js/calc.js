@@ -65,6 +65,17 @@
     return ['shared'];
   }
 
-  const api = { SERVICES, RULES, byWeights, compute, refSlots, refKeys };
+  // Días que faltan para la fecha oportuna de pago (fechas 'YYYY-MM-DD', sin problemas de zona horaria)
+  function deadlineInfo(dateStr, todayStr) {
+    const [y, m, d] = dateStr.split('-').map(Number), [ty, tm, td] = todayStr.split('-').map(Number);
+    const days = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 86400000);
+    if (days > 1) return { days, level: 'ok', icon: '⏳', text: `Quedan ${days} días para el pago oportuno` };
+    if (days === 1) return { days, level: 'ok', icon: '⏳', text: 'Queda 1 día para el pago oportuno' };
+    if (days === 0) return { days, level: 'today', icon: '🔔', text: 'Hoy es la fecha límite' };
+    const n = -days;
+    return { days, level: 'late', icon: '⚠️', text: `Vencido hace ${n} día${n > 1 ? 's' : ''}` };
+  }
+
+  const api = { deadlineInfo, SERVICES, RULES, byWeights, compute, refSlots, refKeys };
   if (typeof module !== 'undefined') module.exports = api; else root.Calc = api;
 })(typeof window !== 'undefined' ? window : globalThis);

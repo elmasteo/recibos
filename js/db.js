@@ -23,7 +23,7 @@ const DB = {
     return b;
   },
   bills: async (f) => {
-    let q = sb.from('utility_bills').select('*, houses(name), bill_allocations(paid)').order('bill_date', { ascending: false }).order('created_at', { ascending: false }).limit(100);
+    let q = sb.from('utility_bills').select('*, houses(name), bill_allocations(paid)').order('bill_date', { ascending: true }).order('created_at', { ascending: false }).limit(100);
     if (f.house) q = q.eq('house_id', f.house); if (f.service) q = q.eq('service_type', f.service);
     if (f.from) q = q.gte('bill_date', f.from); if (f.to) q = q.lte('bill_date', f.to);
     return ok(await q);

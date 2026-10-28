@@ -22,6 +22,7 @@ function ask({ title, text, ok = 'Confirmar', danger = false, word = null }) {
     (w || m.querySelector('[data-r="0"]')).focus();
   });
 }
+const fmtDate = (d) => { const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }); };
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 async function loadHouse(id) {
   S.units = await DB.units(id);
@@ -101,7 +102,12 @@ function histView() {
       ${H.rows.map((r) => `<div class="row ${r.paid ? 'paid' : ''}"><label class="chk"><input type="checkbox" data-paid="${r.id}" ${r.paid ? 'checked' : ''}><span>${esc(r.apartment_name_snapshot)}<small>${r.occupants_count_snapshot} persona(s) al calcular${r.paid && r.paid_at ? ' · Pagó el ' + new Date(r.paid_at).toLocaleDateString('es-CO') : ''}</small></span></label>
       <span class="amt"><b>${COP(r.allocated_amount)}</b><span class="badge ${r.paid ? 'paidb' : 'off'}">${r.paid ? '✓ Pagado' : 'Pendiente'}</span></span></div>`).join('')}
       <button class="btn small danger" data-del="${b.id}" style="margin-top:12px">🗑️ Eliminar este recibo</button></div>`;
-    return `<button class="hist" data-b="${b.id}"><span>${ICONS[b.service_type]} ${Calc.SERVICES[b.service_type]} · ${esc(b.houses.name)}<br><small>${b.bill_date}${b.invoice_reference ? ' · Ref. ' + esc(b.invoice_reference) : ''}${METERS[b.meter_identifier] ? ' · ' + esc(METERS[b.meter_identifier]) : ''}</small><br>${st}</span><b>${COP(b.amount)}</b></button>${det}`;
+    const dl = Calc.deadlineInfo(b.bill_date, today()), mt = METERS[b.meter_identifier];
+    return `<button class="hist" data-b="${b.id}" aria-expanded="${H.open === b.id}">
+      <span class="h-top"><span>${ICONS[b.service_type]} ${Calc.SERVICES[b.service_type]} · ${esc(b.houses.name)}</span><b>${COP(b.amount)}</b></span>
+      <span class="h-meta"><span>📅 ${fmtDate(b.bill_date)}</span>${b.invoice_reference ? `<span>🔖 Ref. ${esc(b.invoice_reference)}</span>` : ''}${mt ? `<span>${esc(mt)}</span>` : ''}</span>
+      <span class="dl ${dl.level}">${dl.icon} ${dl.text}</span>
+      <span>${st}</span></button>${det}`;
   }).join('');
 }
 
