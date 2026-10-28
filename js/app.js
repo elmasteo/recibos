@@ -60,7 +60,7 @@ function calcView() {
   const how = sv === 'electricity' && c === 1 ? '🎯 Luz individual: se asigna al apartamento elegido, sin dividir.' : sv === 'electricity' && c === 3 ? '👥 Cada contador se reparte por personas entre sus apartamentos (1.er piso: garajes · el otro: 4 apartamentos).' : gar3 ? '🗑️ Se suman los 2 recibos y el total se reparte por personas entre los garajes y los 4 apartamentos.' : '👥 Se reparte según el número de personas de cada apartamento.';
   h += `<h2>3. Datos del recibo</h2><div class="panel"><div class="msg info" style="margin-top:0">${how}</div>${extra}
   ${gar3 ? `<label for="g1">Recibo de basura 1 (COP)</label><input id="g1" inputmode="numeric" placeholder="Ej: 45000" value="${esc(f.g1)}"><label for="g2">Recibo de basura 2 (COP)</label><input id="g2" inputmode="numeric" placeholder="Ej: 38000" value="${esc(f.g2)}">` : `<label for="amt">Importe total (COP)</label><input id="amt" inputmode="numeric" placeholder="Ej: 185000" value="${esc(f.amount)}">`}
-  <label for="dt">Fecha del recibo</label><input id="dt" type="date" value="${esc(f.date || today())}"></div>
+  <label for="dt">Fecha Oportuna de pago</label><input id="dt" type="date" value="${esc(f.date || today())}"></div>
   <button class="btn" id="calc" ${S.saving ? 'disabled' : ''}>${S.saving ? 'Guardando…' : 'Calcular y Guardar Recibo'}</button>${msg()}`;
   if (S.result) {
     const r = S.result;
