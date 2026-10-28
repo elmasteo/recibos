@@ -7,17 +7,18 @@ const DB = {
   addUnit: async (u) => ok(await sb.from('apartments').insert(u)),
   saveUnit: async (id, u) => ok(await sb.from('apartments').update({ ...u, updated_at: new Date().toISOString() }).eq('id', id)),
   unitHasHistory: async (id) => { const { count, error } = await sb.from('bill_allocations').select('id', { count: 'exact', head: true }).eq('apartment_id', id); if (error) throw new Error(error.message); return count > 0; },
-  duplicate: async (houseId, service, ref, meter) => {
-    if (!ref) return false;
-    let q = sb.from('utility_bills').select('id').eq('house_id', houseId).eq('service_type', service).eq('invoice_reference', ref);
-    if (meter) q = q.eq('meter_identifier', meter);
+  duplicate: async (houseId, service, meter, amount, date) => {
+    let q = sb.from('utility_bills').select('id').eq('house_id', houseId).eq('service_type', service).eq('amount', amount).eq('bill_date', date);
+    q = meter ? q.eq('meter_identifier', meter) : q.is('meter_identifier', null);
     return ok(await q).length > 0;
   },
+  refs: async (houseId) => ok(await sb.from('payment_references').select('*').eq('house_id', houseId)),
+  saveRefs: async (rows) => ok(await sb.from('payment_references').upsert(rows, { onConflict: 'house_id,service_type,meter_key' })),
   saveBill: async (bill, rows) => {
     const [b] = ok(await sb.from('utility_bills').insert(bill).select());
     const { error } = await sb.from('bill_allocations').insert(rows.map((r) => ({
       bill_id: b.id, apartment_id: r.apartment_id, occupants_count_snapshot: r.occupants,
-      apartment_name_snapshot: r.name, allocation_rule: r.rule, allocated_amount: r.amount })));
+      apartment_name_snapshot: r.name, allocation_rule: r.rule, allocated_amount: r.amount, paid: r.amount === 0 })));
     if (error) { await sb.from('utility_bills').delete().eq('id', b.id); throw new Error(error.message); } // sin recibos a medias
     return b;
   },

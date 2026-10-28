@@ -47,6 +47,24 @@
     return { rule, ruleLabel: RULES[rule], rows };
   }
 
-  const api = { SERVICES, RULES, byWeights, compute };
+  // Referencias de pago configurables: una por recibo y, donde hay varios contadores, una por contador.
+  function refSlots(code, units) {
+    const out = [];
+    for (const service of Object.keys(SERVICES)) {
+      if (code === 1 && service === 'electricity') units.forEach((u) => out.push({ service, key: u.id, label: 'Luz · ' + u.name }));
+      else if (code === 3 && service === 'electricity') out.push({ service, key: 'first_floor', label: 'Luz · Contador 1.er piso (2 garajes)' }, { service, key: 'shared_apartments', label: 'Luz · Contador 4 apartamentos' });
+      else if (code === 3 && service === 'garbage') out.push({ service, key: 'basura_1', label: 'Basura · Recibo 1' }, { service, key: 'basura_2', label: 'Basura · Recibo 2' });
+      else out.push({ service, key: 'shared', label: SERVICES[service] });
+    }
+    return out;
+  }
+  function refKeys(code, service, { meter, unitId } = {}) {
+    if (code === 1 && service === 'electricity') return [unitId];
+    if (code === 3 && service === 'electricity') return [meter];
+    if (code === 3 && service === 'garbage') return ['basura_1', 'basura_2'];
+    return ['shared'];
+  }
+
+  const api = { SERVICES, RULES, byWeights, compute, refSlots, refKeys };
   if (typeof module !== 'undefined') module.exports = api; else root.Calc = api;
 })(typeof window !== 'undefined' ? window : globalThis);
