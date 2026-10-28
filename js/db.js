@@ -1,10 +1,7 @@
 // Acceso a datos (Supabase). Ninguna regla de cálculo aquí.
-const sb = window.supabase.createClient(window.APP_CONFIG.url, window.APP_CONFIG.anonKey);
+const sb = window.supabase.createClient(window.APP_CONFIG.url, window.APP_CONFIG.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
 const ok = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
 const DB = {
-  session: async () => (await sb.auth.getSession()).data.session,
-  login: async (email, password) => ok(await sb.auth.signInWithPassword({ email, password })),
-  logout: () => sb.auth.signOut(),
   houses: async () => ok(await sb.from('houses').select('*').order('code')),
   units: async (houseId) => ok(await sb.from('apartments').select('*').eq('house_id', houseId).order('created_at')),
   addUnit: async (u) => ok(await sb.from('apartments').insert(u)),
@@ -25,10 +22,13 @@ const DB = {
     return b;
   },
   bills: async (f) => {
-    let q = sb.from('utility_bills').select('*, houses(name)').order('bill_date', { ascending: false }).order('created_at', { ascending: false }).limit(100);
+    let q = sb.from('utility_bills').select('*, houses(name), bill_allocations(paid)').order('bill_date', { ascending: false }).order('created_at', { ascending: false }).limit(100);
     if (f.house) q = q.eq('house_id', f.house); if (f.service) q = q.eq('service_type', f.service);
     if (f.from) q = q.gte('bill_date', f.from); if (f.to) q = q.lte('bill_date', f.to);
     return ok(await q);
   },
-  allocations: async (billId) => ok(await sb.from('bill_allocations').select('*').eq('bill_id', billId).order('created_at')),
+  allocations: async (billId) => ok(await sb.from('bill_allocations').select('*').eq('bill_id', billId).order('apartment_name_snapshot').order('id')),
+  setPaid: async (id, paid) => ok(await sb.from('bill_allocations').update({ paid, paid_at: paid ? new Date().toISOString() : null }).eq('id', id)),
+  deleteBill: async (id) => ok(await sb.from('utility_bills').delete().eq('id', id)), // borra también sus repartos (cascade)
+  deleteAll: async () => ok(await sb.from('utility_bills').delete().gte('created_at', '1970-01-01')),
 };

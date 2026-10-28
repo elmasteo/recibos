@@ -31,14 +31,13 @@
       const u = units.find((x) => x.id === unitId) || fail('Selecciona el apartamento al que corresponde la luz.');
       rule = 'direct'; subset = [u]; dist = [{ id: u.id, amount }];
     } else if (service === 'electricity' && code === 3) {
-      const grp = ['garage_1', 'garage_2', 'shared_apartments'].includes(meter) ? meter : fail('Selecciona el contador de luz.');
+      const grp = ['first_floor', 'shared_apartments'].includes(meter) ? meter : fail('Selecciona el contador de luz.');
       subset = units.filter((u) => u.electricity_meter_group === grp);
       if (!subset.length) fail('No hay apartamentos activos asociados a ese contador. Revisa «Apartamentos».');
-      rule = grp === 'shared_apartments' ? 'people' : 'direct';
-      dist = byWeights(amount, subset.map((u) => ({ id: u.id, weight: grp === 'shared_apartments' ? u.occupants_count : 1 })));
+      rule = 'people';
+      dist = byWeights(amount, subset.map((u) => ({ id: u.id, weight: u.occupants_count })));
     } else {
-      if (code === 3 && service === 'garbage' && !['basura_1', 'basura_2'].includes(meter)) fail('Selecciona cuál recibo de basura es (1 o 2).');
-      rule = 'people'; subset = units;
+      rule = 'people'; subset = units; // agua, gas, basura (Casa 3: basura ya viene sumada) y Casas 1-2
       dist = byWeights(amount, subset.map((u) => ({ id: u.id, weight: u.occupants_count })));
     }
     const rows = dist.map((d) => {
